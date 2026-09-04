@@ -492,6 +492,7 @@ function App() {
   const [reportGenderFilter, setReportGenderFilter] = useState('all');
   const [reportLoading, setReportLoading] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionKey>('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastType[]>([]);
@@ -3495,12 +3496,19 @@ function App() {
         ))}
       </div>
       <div className="app-shell">
-        <aside className="sidebar">
+        <header className="mobile-header">
+          <button type="button" className="mobile-menu-button" aria-label="Open navigation" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen(true)}>☰</button>
+          <strong>{t('brand.admin')}</strong>
+          <span>{navItems.find((item) => item.key === activeSection)?.label}</span>
+        </header>
+        {mobileMenuOpen && <button type="button" className="mobile-menu-backdrop" aria-label="Close navigation" onClick={() => setMobileMenuOpen(false)} />}
+        <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+        <div className="mobile-sidebar-header"><strong>{t('brand.admin')}</strong><button type="button" className="mobile-menu-close" aria-label="Close navigation" onClick={() => setMobileMenuOpen(false)}>×</button></div>
         <div className="sidebar-heading"><h2>{t('brand.admin')}</h2><label className="language-switcher"><span>{t('language.label')}</span><select value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)} aria-label={t('language.label')}>{localeOptions.map((option) => <option key={option.value} value={option.value}>{option.nativeLabel}</option>)}</select></label></div>
         <nav>
-          {navItems.map((item) => <button key={item.key} type="button" className={activeSection === item.key ? 'nav-btn active' : 'nav-btn'} onClick={() => setActiveSection(item.key)}>{item.label}</button>)}
+          {navItems.map((item) => <button key={item.key} type="button" className={activeSection === item.key ? 'nav-btn active' : 'nav-btn'} onClick={() => { setActiveSection(item.key); setMobileMenuOpen(false); }}>{item.label}</button>)}
         </nav>
-        <button className="logout-btn" onClick={handleLogout}>{t('nav.logout')}</button>
+        <button className="logout-btn" onClick={() => { setMobileMenuOpen(false); handleLogout(); }}>{t('nav.logout')}</button>
         </aside>
         <main className="content">{renderActiveSection()}</main>
       </div>

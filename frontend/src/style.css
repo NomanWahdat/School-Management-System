@@ -803,3 +803,145 @@ button, input, select, textarea { font-family: inherit; }
 [dir="rtl"] .search-field { flex-direction: row-reverse; }
 [dir="rtl"] .form-actions, [dir="rtl"] .row-actions { justify-content: flex-start; }
 
+/* Responsive adaptations: the desktop layout above remains unchanged. */
+.mobile-header, .mobile-menu-backdrop, .mobile-sidebar-header { display: none; }
+
+@media (max-width: 1100px) and (min-width: 701px) {
+  .content { padding: 28px 24px 40px; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .panel-grid { grid-template-columns: 1fr; }
+  .teacher-summary-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .student-workspace { grid-template-columns: minmax(0, 1fr); }
+  .student-detail-panel { position: static; }
+  .student-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 960px) and (min-width: 701px) {
+  .app-shell { display: block; min-width: 0; overflow-x: clip; }
+  .content { width: 100%; min-width: 0; }
+  .mobile-header { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 10px 18px; background: #102a35; color: #f0fdfa; box-shadow: 0 4px 14px rgba(15, 42, 53, .16); }
+  .mobile-header strong { flex: 0 0 auto; font-size: .98rem; }
+  .mobile-header span { min-width: 0; overflow: hidden; color: #b8d0d0; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-menu-button, .mobile-menu-close { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border: 1px solid rgba(240, 253, 250, .25); border-radius: 10px; background: rgba(255,255,255,.08); color: white; cursor: pointer; font-size: 1.25rem; }
+  .mobile-menu-backdrop { position: fixed; inset: 0; z-index: 50; display: block; border: 0; background: rgba(10, 30, 38, .52); }
+  .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 60; display: flex; width: min(300px, 52vw); height: 100dvh; padding: 20px 16px; overflow-y: auto; transform: translateX(-105%); transition: transform .2s ease; box-shadow: 12px 0 28px rgba(15, 42, 53, .22); }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .mobile-sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: #f0fdfa; }
+  .sidebar-heading h2 { display: none; }
+  .nav-btn, .logout-btn { min-height: 44px; }
+  [dir="rtl"] .sidebar { inset: 0 0 0 auto; transform: translateX(105%); box-shadow: -12px 0 28px rgba(15, 42, 53, .22); }
+  [dir="rtl"] .sidebar.mobile-open { transform: translateX(0); }
+}
+
+@media (max-width: 700px) {
+  html, body, #root { width: 100%; min-width: 0; }
+  .app-shell { display: block; min-width: 0; overflow-x: clip; }
+  .content { width: 100%; min-width: 0; padding: 16px 12px 30px; }
+
+  .mobile-header {
+    position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 10px;
+    min-height: 58px; padding: 10px 12px; background: #102a35; color: #f0fdfa;
+    box-shadow: 0 4px 14px rgba(15, 42, 53, .16);
+  }
+  .mobile-header strong { flex: 0 0 auto; font-size: .94rem; }
+  .mobile-header span { min-width: 0; overflow: hidden; color: #b8d0d0; font-size: .84rem; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-menu-button, .mobile-menu-close {
+    display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px;
+    border: 1px solid rgba(240, 253, 250, .25); border-radius: 10px; background: rgba(255,255,255,.08);
+    color: white; cursor: pointer; font-size: 1.25rem;
+  }
+  .mobile-menu-backdrop { position: fixed; inset: 0; z-index: 50; display: block; border: 0; background: rgba(10, 30, 38, .52); }
+  .sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 60; display: flex; width: min(286px, 86vw); height: 100dvh;
+    padding: 18px 14px 16px; overflow-y: auto; transform: translateX(-105%); transition: transform .2s ease;
+    box-shadow: 12px 0 28px rgba(15, 42, 53, .22);
+  }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .mobile-sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: #f0fdfa; }
+  .mobile-sidebar-header strong { font-size: 1rem; }
+  .mobile-menu-close { width: 38px; height: 38px; flex-basis: 38px; font-size: 1.5rem; }
+  .sidebar-heading { gap: 10px; }
+  .sidebar-heading h2 { display: none; }
+  .nav-btn { min-height: 44px; }
+  .logout-btn { min-height: 44px; }
+  [dir="rtl"] .sidebar { inset: 0 0 0 auto; transform: translateX(105%); box-shadow: -12px 0 28px rgba(15, 42, 53, .22); }
+  [dir="rtl"] .sidebar.mobile-open { transform: translateX(0); }
+
+  .dashboard-header, .student-page-header, .exam-page-header, .workspace-header, .timetable-header,
+  .attendance-report-header, .report-intro, .overview-panel-header, .panel-header-row, .table-header-row,
+  .detail-header { align-items: stretch; flex-direction: column; }
+  .dashboard-header { gap: 16px; padding: 18px 16px; }
+  .dashboard-header h3, .student-page-header h3 { font-size: 1.75rem; overflow-wrap: anywhere; }
+  .dashboard-topbar-actions { align-items: stretch; flex-direction: column; gap: 10px; }
+  .dashboard-topbar-actions .notification-wrap, .dashboard-topbar-actions .icon-btn { width: 100%; }
+  .dashboard-topbar-actions .icon-btn { min-height: 44px; }
+  .user-badge { width: 100%; }
+  .notification-panel { inset-inline: 12px; top: 112px; width: auto; max-height: calc(100dvh - 128px); }
+
+  .cards, .panel-grid, .student-form, .small-form, .student-form-grid, .fee-form-shell,
+  .timetable-filter-row, .attendance-toolbar, .attendance-filters, .attendance-summary-strip,
+  .report-control-grid, .result-entry-controls, .result-filter-row, .fee-student-filter-row,
+  .fee-student-list, .teacher-class-page-list, .teacher-announcement-list, .subject-checklist {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cards { gap: 12px; margin-bottom: 16px; }
+  .stat-card, .dashboard-summary-cards .stat-card { min-height: 112px; padding: 16px; }
+  .panel { min-width: 0; padding: 16px; }
+  .quick-actions { display: grid; grid-template-columns: 1fr; }
+  .quick-actions button, .primary-action-btn, .form-actions > button { width: 100%; min-height: 44px; }
+  .overview-panel-header .overview-status-pill { align-self: flex-start; }
+  .attendance-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .attendance-summary-grid div { min-height: 82px; padding: 10px 6px; }
+  .attendance-summary-grid strong { font-size: 1.35rem; }
+  .attendance-empty-state { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .class-table-header, .class-row { grid-template-columns: minmax(0, 1fr) repeat(3, minmax(42px, .55fr)); gap: 6px; }
+  .class-table-header { padding-inline: 4px; font-size: .68rem; }
+  .class-row { padding: 9px 8px; font-size: .84rem; }
+
+  .student-toolbar, .exam-filter-panel .student-toolbar,
+  .student-toolbar[style], .fee-student-filter-row[style] { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+  .student-toolbar-panel { position: static; padding: 0 0 8px; }
+  .student-workspace { grid-template-columns: minmax(0, 1fr); }
+  .student-detail-panel { position: static; }
+  .detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .detail-profile { align-items: flex-start; }
+  .form-actions, .row-actions, .account-actions { align-items: stretch; flex-direction: column; }
+  .form-actions > button, .row-actions > button, .row-actions > .status-badge { width: 100%; text-align: center; }
+  .table-header-row .muted-count, .table-header-row .workspace-count { align-self: flex-start; }
+  .table-wrap { width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-wrap table { min-width: 680px; }
+  .table-panel > table { display: block; width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-panel > table thead, .table-panel > table tbody { min-width: 680px; }
+  .exam-list-panel table { min-width: 820px; }
+  .exam-results-modal table { min-width: 680px; }
+  .table-panel th, .table-panel td { padding: 9px 10px; white-space: nowrap; }
+  .student-name-cell { min-width: 170px; }
+  .action-menu { position: fixed !important; inset-inline: 12px !important; bottom: 12px; top: auto !important; min-width: 0 !important; z-index: 80 !important; }
+
+  .attendance-item { align-items: stretch; }
+  .status-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .status-buttons button { min-height: 44px; padding-inline: 6px; }
+  .attendance-toolbar .save-attendance-btn { width: 100%; }
+  .report-control-action, .sticky-result-actions { align-items: stretch; flex-direction: column; }
+  .sticky-result-actions span { margin-right: 0; }
+  .marks-input { width: 100%; min-width: 90px; }
+  .exam-modal, .exam-detail-modal, .exam-results-modal, .fee-modal-shell, .forgot-modal { width: 100%; max-width: 100%; max-height: calc(100dvh - 24px); padding: 16px; }
+  .modal-backdrop { align-items: flex-start; overflow-y: auto; padding: 12px; }
+  .modal-header h3 { font-size: 1.35rem; overflow-wrap: anywhere; }
+  .modal-header .secondary-btn { width: 100%; min-height: 44px; }
+  .fee-student-list { max-height: 250px; }
+  .profile-activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .login-shell { padding: 12px; }
+  .login-card, .enhanced-login-card { width: 100%; padding: 22px 18px; }
+  .login-language-switcher { justify-content: space-between; }
+}
+
+@media (max-width: 360px) {
+  .content { padding-inline: 8px; }
+  .panel { padding: 13px; }
+  .dashboard-header { padding-inline: 13px; }
+  .attendance-summary-grid { gap: 5px; }
+  .attendance-summary-grid span { font-size: .7rem; }
+  .status-buttons { grid-template-columns: 1fr; }
+}
+
