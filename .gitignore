@@ -24,3 +24,8 @@ frontend/.env.*.local
 .idea/
 .DS_Store
 *.log
+.cache/
+backups/
+frontend/test-results/
+frontend/playwright-report/
+backend/.verification/

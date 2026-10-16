@@ -30,6 +30,9 @@ SECRET_KEY = os.environ.get(
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
+if not DEBUG and not os.environ.get('DJANGO_SECRET_KEY'):
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured('DJANGO_SECRET_KEY must be configured in production.')
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -49,14 +52,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'school_app',
 ]
 
 MIDDLEWARE = [
+    'school_app.tenancy.SchoolContextMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -124,8 +130,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
+LANGUAGES = [('en', 'English'), ('fa', 'Dari'), ('ps', 'Pashto')]
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kabul'
 
 USE_I18N = True
 
@@ -166,19 +173,31 @@ else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
 REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'school_app.errors.safe_exception_handler',
+    'URL_FORMAT_OVERRIDE': None,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'school_app.authentication.RevocableJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'school_app.permissions.SchoolAccess',
     )
 }
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=12),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = (*default_headers, 'x-school-id')
 
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         'CORS_ALLOWED_ORIGINS',
-        'http://localhost:5173,http://localhost:4173',
+        'http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173' if DEBUG else '',
     ).split(',')
     if origin.strip()
 ]
@@ -192,6 +211,8 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'False').lower() == 'true'
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+SECURE_HSTS_SECONDS = 3600 if not DEBUG else 0
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

@@ -4,12 +4,31 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from school_app.models import Announcement, Attendance, Exam, Fee, FeePayment, Homework, Result, SchoolClass, Student, Teacher, TimetableEntry, User
+from school_app.models import School, Membership, Announcement, Attendance, Exam, Fee, FeePayment, Homework, Result, SchoolClass, Student, Teacher, TimetableEntry, User
 
+
+from school_app.tenancy import school_context
+from school_app.authentication import issue_tokens
+from django.core.cache import cache
+from django.utils import timezone
+
+class ScopedAPIClient(APIClient):
+    def __init__(self, school):
+        super().__init__()
+        self.school = school
+
+    def force_authenticate(self, user=None, token=None):
+        member = Membership.objects.filter(user=user, school=self.school).first() if user else None
+        self.credentials(HTTP_AUTHORIZATION='Bearer ' + issue_tokens(user, member)['access'], HTTP_X_SCHOOL_ID=str(self.school.pk)) if user else self.credentials()
 
 class SchoolAppAPITests(TestCase):
     def setUp(self):
-        self.client = APIClient()
+        cache.clear()
+        self.school = School.objects.create(name='Legacy test school', slug='legacy-test')
+        self.scope = school_context(self.school.pk)
+        self.scope.__enter__()
+        self.addCleanup(self.scope.__exit__, None, None, None)
+        self.client = ScopedAPIClient(self.school)
         self.admin = User.objects.create_user(
             username='admin',
             password='adminpass123',
@@ -23,6 +42,8 @@ class SchoolAppAPITests(TestCase):
             email='teacher@example.com',
         )
 
+        Membership.objects.create(user=self.admin, school=self.school, role='admin')
+        Membership.objects.create(user=self.teacher, school=self.school, role='teacher')
         self.grade8 = SchoolClass.objects.create(name='Grade 8')
         self.math_teacher = Teacher.objects.create(
             user=self.teacher,
@@ -443,14 +464,15 @@ class SchoolAppAPITests(TestCase):
 
         delete_class_response = self.client.delete(reverse('class-detail', args=[self.grade8.id]))
         self.assertEqual(delete_class_response.status_code, 204)
-        self.assertFalse(SchoolClass.objects.filter(id=self.grade8.id).exists())
+        self.assertFalse(SchoolClass.objects.filter(id=self.grade8.id, status='Active').exists())
 
     def test_teacher_dashboard_shows_marked_attendance_for_assigned_classes(self):
         self.client.force_authenticate(user=self.teacher)
         student = Student.objects.get(student_id='S-1001')
-        today = date.today()
+        today = timezone.localdate()
         Attendance.objects.create(
             student=student,
+            school_class=self.grade8,
             attendance_date=today,
             status='Present',
             remarks='Marked by admin',
@@ -463,7 +485,7 @@ class SchoolAppAPITests(TestCase):
 
     def test_teacher_dashboard_exposes_assigned_class_ids_and_timetable(self):
         self.client.force_authenticate(user=self.teacher)
-        today = date.today()
+        today = timezone.localdate()
         TimetableEntry.objects.create(
             day=today.strftime('%A'),
             start_time='08:00:00',
@@ -490,6 +512,8 @@ class SchoolAppAPITests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_admin_can_create_teacher_account_and_teacher_can_login(self):
+        self.math_teacher.user = None
+        self.math_teacher.save(update_fields=['user'])
         self.client.force_authenticate(user=self.admin)
         response = self.client.post(
             reverse('teacher-account', args=[self.math_teacher.id]),

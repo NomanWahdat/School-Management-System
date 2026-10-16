@@ -2,6 +2,16 @@
 
 React/Vite frontend and Django/DRF backend for school administration.
 
+The system now supports independent school workspaces, a Platform Super Admin,
+membership-based School Admin/Teacher permissions, school branding and a redesigned
+English/Dari/Pashto interface. Read [the architecture, migration and deployment guide](docs/MULTI_TENANCY.md)
+before upgrading an existing database. Verification evidence is in [docs/VERIFICATION.md](docs/VERIFICATION.md).
+
+The classroom/finance upgrade adds grades 1–12 sections, attributed attendance retakes,
+printable weekly class/teacher schedules, student statements, in-app notifications and
+the synthetic **Kabul School** demo. PostgreSQL RLS is implemented; follow the
+[required Neon runtime-role rollout](docs/POSTGRESQL_RLS.md) before production deployment.
+
 ## Deployment architecture
 
 - Frontend: Vercel
@@ -35,15 +45,16 @@ Copy `frontend/.env.example` to `frontend/.env.local` for local API configuratio
 1. Create a Neon project and copy its pooled PostgreSQL connection string.
 2. In Render, create a Web Service from this repository, or use the included `render.yaml` Blueprint.
 3. For manual configuration, use root directory `backend`.
-4. Use build command `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`.
-5. Use start command `gunicorn school_management.wsgi:application`.
+4. Use build command `pip install -r requirements.txt && python build.py`.
+5. Use start command `python start.py`.
 6. Configure these Render environment variables:
 
 ```text
 DJANGO_SECRET_KEY=<long-random-secret>
 DJANGO_DEBUG=False
 DJANGO_ALLOWED_HOSTS=<your-render-host>.onrender.com
-DATABASE_URL=<Neon pooled connection string>
+DATABASE_URL=<Neon pooled connection string using restricted school_runtime login>
+MIGRATION_DATABASE_URL=<Neon direct connection string using schema owner>
 CORS_ALLOWED_ORIGINS=https://<your-vercel-domain>.vercel.app
 CSRF_TRUSTED_ORIGINS=https://<your-vercel-domain>.vercel.app
 DJANGO_SECURE_SSL_REDIRECT=False
@@ -91,19 +102,18 @@ After Vercel gives you a domain, update the Render CORS and CSRF variables with 
 
 ## Existing SQLite data
 
-The repository intentionally ignores `backend/db.sqlite3`. If you need to move local records to Neon, export them before deployment:
+Before the multi-school upgrade, back up the database, run the ownership preflight
+and test a migrated copy as described in [the migration guide](docs/MULTI_TENANCY.md#backup-and-migration).
+Existing records are preserved in the `existing-school` workspace; old sessions must sign in again.
 
-```powershell
-.\.venv\Scripts\python.exe backend\manage.py dumpdata --natural-foreign --natural-primary --exclude contenttypes --exclude auth.permission --indent 2 > backend\data.json
-```
-
-After temporarily pointing `DATABASE_URL` to Neon and running migrations:
-
-```powershell
-.\.venv\Scripts\python.exe backend\manage.py loaddata backend\data.json
-```
-
-Do not commit `data.json` if it contains private school data.
+The repository intentionally ignores `backend/db.sqlite3`. For a move to Neon, use
+a tested database migration/backup process. Do not run an unscoped `dumpdata` of
+school-owned models: their default managers intentionally require verified school
+context. Legacy JSON fixtures lack required school ownership and cannot be loaded
+directly into the upgraded schema. A SQLite-to-PostgreSQL transfer needs a separate,
+tested data conversion preserving schools, memberships, original IDs, password
+hashes, relationships and sequence values. Verify the restored data and PostgreSQL
+ownership guards before directing users to it. Do not commit exported school data.
 
 ## Production checks
 
