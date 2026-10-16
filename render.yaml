@@ -2,6 +2,7 @@ services:
   - type: web
     name: school-management-api
     runtime: python
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python build.py
     startCommand: python start.py
@@ -33,5 +34,9 @@ services:
         sync: false
       - key: AWS_S3_REGION_NAME
         value: auto
+      - key: AWS_S3_ADDRESSING_STYLE
+        value: path
+      - key: AWS_S3_SIGNATURE_VERSION
+        value: s3v4
       - key: AWS_S3_CUSTOM_DOMAIN
         sync: false

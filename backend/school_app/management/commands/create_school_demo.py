@@ -101,6 +101,16 @@ class Command(BaseCommand):
                     attribution={'actor_name':taken.name if taken else actor.get_full_name() or actor.username,'actor_identifier':taken.teacher_id if taken else actor.username,'actor_role':'teacher' if taken else 'admin'}
                     session=AttendanceSession.objects.create(school_class=cls,attendance_date=day,taken_by=teacher.user or actor,**attribution)
                     AttendanceRevision.objects.create(session=session,revision=1,records=register,reason='Synthetic demonstration register',**attribution)
+                    if day == past_days[0]:
+                        # Keep the first register as history and show a realistic correction.
+                        corrected = [dict(record) for record in register]
+                        corrected[0].update(status='Late', remarks='Arrived after the first register (synthetic demo).')
+                        Attendance.objects.filter(student_id=corrected[0]['student'], attendance_date=day).update(
+                            status='Late', remarks=corrected[0]['remarks'])
+                        session.revision = 2
+                        session.save(update_fields=['revision'])
+                        AttendanceRevision.objects.create(session=session,revision=2,records=corrected,
+                            reason='Corrected a late arrival in the synthetic demo',**attribution)
                 subjects=[s for s in ['Mathematics','Dari','English','Science','Physics'] if s in cls.subjects][:3]
                 exam=Exam.objects.create(name=f'{cls.name} — Monthly Assessment',school_class=cls,subject=subjects[0],subjects=subjects,exam_type='Monthly Test',academic_year=year,exam_date=today-timedelta(days=10),max_marks=100)
                 for student in pupils[cls.pk]:

@@ -8,6 +8,27 @@ from .tenancy import school_context
 
 class ClassroomWorkflowTests(test_isolation.SchoolIsolationTests):
     # Reuse the established two-school fixtures, without rerunning inherited tests.
+    def test_demo_preserves_original_register_and_seeds_retake_history(self):
+        from .models import SchoolClass, Attendance
+        output = StringIO()
+        call_command('create_school_demo', admin=self.admin.username, students_per_class=4, stdout=output)
+        demo = School.objects.get(slug='kabul-school')
+        with school_context(demo.pk):
+            self.assertEqual(SchoolClass.objects.count(), 24)
+            self.assertEqual(Student.objects.count(), 96)
+            self.assertEqual(AttendanceSession.objects.filter(revision=2).count(), 24)
+            session = AttendanceSession.objects.filter(revision=2).first()
+            self.assertEqual(list(session.history.order_by('revision').values_list('revision', flat=True)), [1, 2])
+            latest = session.history.get(revision=2)
+            self.assertEqual(latest.records[0]['status'], 'Late')
+            recorded = Attendance.objects.get(student_id=latest.records[0]['student'], attendance_date=session.attendance_date)
+            self.assertEqual(recorded.status, 'Late')
+            self.assertEqual(recorded.remarks, latest.records[0]['remarks'])
+            self.assertEqual(TimetableEntry.objects.count(), 720)
+        call_command('create_school_demo', admin=self.admin.username, students_per_class=4, stdout=output)
+        with school_context(demo.pk):
+            self.assertEqual(AttendanceSession.objects.filter(revision=2).count(), 24)
+
     def test_attendance_attribution_retake_permissions_and_conflict(self):
         own = self.items[self.a.pk]
         with school_context(self.a.pk):

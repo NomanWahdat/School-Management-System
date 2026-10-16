@@ -163,6 +163,8 @@ if os.environ.get('AWS_STORAGE_BUCKET_NAME') and os.environ.get('AWS_S3_ENDPOINT
     AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
     AWS_S3_ENDPOINT_URL = os.environ['AWS_S3_ENDPOINT_URL']
     AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'auto')
+    AWS_S3_ADDRESSING_STYLE = os.environ.get('AWS_S3_ADDRESSING_STYLE', 'path')
+    AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION', 's3v4')
     AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', '')
     AWS_QUERYSTRING_AUTH = False
     AWS_DEFAULT_ACL = None
