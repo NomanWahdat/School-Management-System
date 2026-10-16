@@ -1,6 +1,9 @@
 from django.core.management import call_command
 from django.utils import timezone
 from io import StringIO
+import json
+import os
+from unittest.mock import patch
 from . import test_isolation
 from .models import SchoolSettings, AttendanceSession, AttendanceRevision, Notification, Membership, School, Student, Fee, TimetableEntry
 from .tenancy import school_context
@@ -8,6 +11,26 @@ from .tenancy import school_context
 
 class ClassroomWorkflowTests(test_isolation.SchoolIsolationTests):
     # Reuse the established two-school fixtures, without rerunning inherited tests.
+    def test_server_demo_bootstrap_is_repeatable_and_preserves_passwords(self):
+        from .models import User, Teacher
+        accounts = {name:'Synthetic-bootstrap-password-2026!' for name in ('kabul-admin','kabul-teacher','platform-owner')}
+        with patch.dict(os.environ, {'SCHOOL_DEMO_ACCOUNTS':json.dumps(accounts)}):
+            call_command('bootstrap_school_demo', stdout=StringIO())
+        admin = User.objects.get(username='kabul-admin')
+        self.assertTrue(admin.must_change_password)
+        self.assertFalse(admin.is_superuser)
+        self.assertTrue(User.objects.get(username='platform-owner').is_superuser)
+        original_password = admin.password
+        accounts['kabul-admin'] = 'Another-private-password-2026!'
+        with patch.dict(os.environ, {'SCHOOL_DEMO_ACCOUNTS':json.dumps(accounts)}):
+            call_command('bootstrap_school_demo', stdout=StringIO())
+        admin.refresh_from_db()
+        self.assertEqual(admin.password, original_password)
+        demo = School.objects.get(slug='kabul-school')
+        with school_context(demo.pk):
+            self.assertEqual(Student.objects.count(),288)
+            self.assertEqual(Teacher.objects.filter(user__username='kabul-teacher',subject='Mathematics').count(),1)
+
     def test_demo_preserves_original_register_and_seeds_retake_history(self):
         from .models import SchoolClass, Attendance
         output = StringIO()
